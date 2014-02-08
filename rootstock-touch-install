@@ -1,0 +1,141 @@
+#!/bin/sh
+
+set -e
+
+TARPATH=$1
+SYSIMG=$2
+
+check_prereq()
+{
+	if [ ! $(which make_ext4fs) ] || [ ! -x $(which simg2img) ] || \
+		[ ! -x $(which adb) ]; then
+		echo "please install the android-tools-fsutils and android-tools-adb packages" && exit 1
+	fi
+}
+
+do_shell()
+{
+	adb shell "$@"
+}
+
+convert_android_img()
+{
+	simg2img $SYSIMG $WORKDIR/system.img.raw
+	mkdir $TMPMOUNT
+	mount -t ext4 -o loop $WORKDIR/system.img.raw $TMPMOUNT
+	make_ext4fs -l 120M $WORKDIR/system.img $TMPMOUNT >/dev/null 2>&1
+}
+
+prepare_ubuntu_system()
+{
+	do_shell "rm -f /data/system.img"
+	for data in system android; do
+		do_shell "rm -rf /data/$data-data"
+	done
+	if [ -z "$KEEP" ]; then
+		do_shell "rm -rf /data/user-data"
+	else
+		echo -n "keep option set, keeping user data ... "
+	fi
+	do_shell "dd if=/dev/zero of=/data/system.img seek=500K bs=4096 count=0 >/dev/null 2>&1"
+	do_shell "mkfs.ext2 -F /data/system.img >/dev/null 2>&1"
+	do_shell "mkdir -p /cache/system"
+	do_shell "mount -o loop /data/system.img /cache/system/"
+}
+
+cleanup()
+{
+	mount | grep -q $TMPMOUNT 2>/dev/null && umount $TMPMOUNT
+	cleanup_device
+	rm -rf $WORKDIR
+	echo
+}
+
+cleanup_device()
+{
+	[ -e $WORKDIR/device-clean ] && return
+	do_shell "umount /cache/system/ 2>/dev/null && rm -rf /cache/system 2>/dev/null"
+	do_shell "rm -f /recovery/$TARBALL"
+	[ -e $WORKDIR ] && touch $WORKDIR/device-clean 2>/dev/null || true
+}
+
+trap cleanup 0 1 2 3 9 15
+
+usage()
+{
+	echo "usage: $(basename $0) <path to rootfs tarball> <path to android system.img> [options]\n
+	options:
+	-h|--help		this message
+	-k|--keep-userdata	do not wipe user data on device\n"
+	exit 1
+}
+
+SUDOARGS="$@"
+
+while [ $# -gt 0 ]; do
+        case "$1" in
+                -h|--help)
+                    usage
+                    ;;
+				-k|--keep-userdata)
+					KEEP=1
+					;;
+        esac
+        shift
+done
+
+TARBALL=$(basename $TARPATH)
+
+if [ -z "$TARBALL" ] || [ -z "$SYSIMG" ] || \
+	[ "$(file --mime-type $TARPATH|sed 's/^.* //')" != "application/gzip" ] || \
+	[ "$(file --mime-type $SYSIMG|sed 's/^.* //')" != "application/octet-stream" ]; then
+	echo "need valid tarball and system.img paths"
+	usage
+fi
+
+[ $(id -u) -ne 0 ] && exec sudo $0 $SUDOARGS
+
+check_prereq
+
+if ! adb devices | grep -q recovery; then
+	echo "please make sure the device is attched via USB in recovery mode"
+	exit 1
+fi
+
+WORKDIR=$(mktemp -d /tmp/rootstock-touch-install.XXXXX)
+TMPMOUNT="$WORKDIR/tmpmount"
+
+echo -n "transfering rootfs tarball ... "
+adb push $TARPATH /recovery/ >/dev/null 2>&1
+echo "[done]"
+
+echo -n "preparing system-image on device ... "
+prepare_ubuntu_system
+echo "[done]"
+
+echo -n "unpacking rootfs tarball to system-image ... "
+do_shell "cd /cache/system && zcat /recovery/$TARBALL | tar xf -"
+do_shell "mkdir /cache/system/android"
+do_shell "mkdir /cache/system/userdata"
+do_shell "[ -e /cache/system/SWAP.swap ] && mv /cache/system/SWAP.swap /data/SWAP.img"
+for link in cache data factory firmware persist system vendor; do
+	do_shell "cd /cache/system && ln -s /android/$link $link"
+done
+echo "[done]"
+
+echo -n "adding android system image to installation ... "
+convert_android_img
+ANDROID_DIR="/cache/system/var/lib/lxc/android/"
+adb push $WORKDIR/system.img $ANDROID_DIR >/dev/null 2>&1
+echo "[done]"
+
+echo -n "enabling Mir ... "
+do_shell "touch /cache/system/home/phablet/.display-mir"
+echo "[done]"
+
+echo -n "cleaning up on device ... "
+cleanup_device
+echo "[done]"
+
+echo "rebooting device"
+adb reboot
