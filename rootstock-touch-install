@@ -73,15 +73,15 @@ usage()
 SUDOARGS="$@"
 
 while [ $# -gt 0 ]; do
-        case "$1" in
-                -h|--help)
-                    usage
-                    ;;
-				-k|--keep-userdata)
-					KEEP=1
-					;;
-        esac
-        shift
+	case "$1" in
+		-h|--help)
+			usage
+			;;
+		-k|--keep-userdata)
+			KEEP=1
+			;;
+	esac
+	shift
 done
 
 TARBALL=$(basename $TARPATH)
