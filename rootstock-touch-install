@@ -124,7 +124,7 @@ for link in cache data factory firmware persist system; do
 done
 do_shell "cd /cache/system/lib && ln -s /system/lib/modules modules"
 do_shell "cd /cache/system && ln -s /android/system/vendor vendor"
-do_shell "rm /cache/system/etc/mtab"
+do_shell "[ -e /cache/system/etc/mtab ] && rm /cache/system/etc/mtab"
 do_shell "cd /cache/system/etc && ln -s /proc/mounts mtab"
 echo "[done]"
 
