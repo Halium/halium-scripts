@@ -130,7 +130,6 @@ echo -n "unpacking custom tarball"
 if [ ! -z $CUST_TARPATH ];then
 	do_shell "mkdir -p /cache/system/custom"
 	do_shell "cd /cache && xzcat /recovery/$CUST_TARBALL | tar xf -"
-	do_shell "ls -l /cache/system/custom"
 fi
 echo "[done]"
 
