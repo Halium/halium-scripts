@@ -80,6 +80,7 @@ while [ $# -gt 0 ]; do
 			;;
 		-c|--custom)
 			[ -n "$2" ] && CUST_TARPATH=$2 shift || usage
+			;;
 		-k|--keep-userdata)
 			KEEP=1
 			;;
