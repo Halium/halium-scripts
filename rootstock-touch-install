@@ -90,16 +90,30 @@ done
 
 TARBALL=$(basename $TARPATH)
 
-if [ -z "$TARBALL" ] || [ -z "$SYSIMG" ] || \
-	[ "$(file --mime-type $TARPATH|sed 's/^.* //')" != "application/gzip" ] || \
+if [ -z "$TARBALL" ]; then
+    echo "need valid rootfs tarball path"
+    usage
+fi
+
+TARTYPE=$(file --mime-type $TARPATH|sed 's/^.* //')
+case ${TARTYPE#application\/} in
+    gzip|x-gzip)
+	;;
+    *)
+	echo "Need valid rootfs tarball gzip type"
+	usage
+	;;
+esac
+
+if [ -z "$SYSIMG" ] || \
 	[ "$(file --mime-type $SYSIMG|sed 's/^.* //')" != "application/octet-stream" ]; then
-	echo "need valid tarball and system.img paths"
+	echo "need valid system.img path and type application/octet-stream"
 	usage
 fi
 
 if [ ! -z $CUST_TARPATH ] && \
 	[  "$(file --mime-type $CUST_TARPATH|sed 's/^.* //')" != "application/x-xz" ]; then
-	echo "Custom tarball needs to be .tar.xz"
+	echo "Custom tarball needs to be valid path and type .tar.xz"
 	usage
 fi
 
