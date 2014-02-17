@@ -4,7 +4,6 @@ set -e
 
 TARPATH=$1
 SYSIMG=$2
-CUST_TARPATH=$3
 
 check_prereq()
 {
@@ -64,9 +63,10 @@ trap cleanup 0 1 2 3 9 15
 
 usage()
 {
-	echo "usage: $(basename $0) <rootfs> <system.img> <custom tarball> [options]\n
+	echo "usage: $(basename $0) <path to rootfs tarball> <path to android system.img> [options]\n
 	options:
 	-h|--help		this message
+	-c|--custom		path to customization tarball (needs to be tar.xz)
 	-k|--keep-userdata	do not wipe user data on device\n"
 	exit 1
 }
@@ -78,6 +78,8 @@ while [ $# -gt 0 ]; do
 		-h|--help)
 			usage
 			;;
+		-c|--custom)
+			[ -n "$2" ] && CUST_TARPATH=$2 shift || usage
 		-k|--keep-userdata)
 			KEEP=1
 			;;
@@ -115,6 +117,7 @@ TMPMOUNT="$WORKDIR/tmpmount"
 echo -n "transfering rootfs tarball ... "
 adb push $TARPATH /recovery/ >/dev/null 2>&1
 echo "[done]"
+
 if [ ! -z $CUST_TARPATH ]; then
 	CUST_TARBALL=$(basename $CUST_TARPATH)
 	echo  -n "transferring custom tarball"
@@ -126,12 +129,12 @@ echo -n "preparing system-image on device ... "
 prepare_ubuntu_system
 echo "[done]"
 
-echo -n "unpacking custom tarball"
 if [ ! -z $CUST_TARPATH ];then
+	echo -n "unpacking custom tarball"
 	do_shell "mkdir -p /cache/system/custom"
 	do_shell "cd /cache && xzcat /recovery/$CUST_TARBALL | tar xf -"
+	echo "[done]"
 fi
-echo "[done]"
 
 echo -n "unpacking rootfs tarball to system-image ... "
 do_shell "cd /cache/system && zcat /recovery/$TARBALL | tar xf -"
