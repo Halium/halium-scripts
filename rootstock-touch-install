@@ -68,7 +68,7 @@ usage()
 	-h|--help		this message
 	-c|--custom		path to customization tarball (needs to be tar.xz)
 	-k|--keep-userdata	do not wipe user data on device
-	-w|--wipe-file		absolute path of a file inside the image to remove\n"
+	-w|--wipe-file		absolute path of a file inside the image to wipe (empty)\n"
 	exit 1
 }
 
@@ -162,7 +162,7 @@ do_shell "cd /cache/system && ln -s /android/system/vendor vendor"
 do_shell "[ -e /cache/system/etc/mtab ] && rm /cache/system/etc/mtab"
 do_shell "cd /cache/system/etc && ln -s /proc/mounts mtab"
 if [ ! -z "$WIPE_PATH" ]; then
-	do_shell "rm -rf $WIPE_PATH || true"
+	do_shell "echo ' ' >$WIPE_PATH || true"
 fi
 echo "[done]"
 
