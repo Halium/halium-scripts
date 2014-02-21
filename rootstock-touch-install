@@ -162,7 +162,7 @@ do_shell "cd /cache/system && ln -s /android/system/vendor vendor"
 do_shell "[ -e /cache/system/etc/mtab ] && rm /cache/system/etc/mtab"
 do_shell "cd /cache/system/etc && ln -s /proc/mounts mtab"
 if [ ! -z "$WIPE_PATH" ]; then
-	do_shell "echo ' ' >$WIPE_PATH || true"
+	do_shell "echo ' ' >/cache/system/$WIPE_PATH || true"
 fi
 echo "[done]"
 
