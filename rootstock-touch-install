@@ -115,7 +115,7 @@ if [ -z "$SYSIMG" ] || \
 	usage
 fi
 
-if [ ! -z $CUST_TARPATH ] && \
+if [ ! -z "$CUST_TARPATH" ] && \
 	[  "$(file --mime-type $CUST_TARPATH|sed 's/^.* //')" != "application/x-xz" ]; then
 	echo "Custom tarball needs to be valid path and type .tar.xz"
 	usage
@@ -137,7 +137,7 @@ echo -n "transfering rootfs tarball ... "
 adb push $TARPATH /recovery/ >/dev/null 2>&1
 echo "[done]"
 
-if [ ! -z $CUST_TARPATH ]; then
+if [ ! -z "$CUST_TARPATH" ]; then
 	CUST_TARBALL=$(basename $CUST_TARPATH)
 	echo  -n "transferring custom tarball"
 	adb push $CUST_TARPATH /recovery/ >/dev/null 2>&1
@@ -166,7 +166,7 @@ if [ ! -z "$WIPE_PATH" ]; then
 fi
 echo "[done]"
 
-if [ ! -z $CUST_TARPATH ];then
+if [ ! -z "$CUST_TARPATH" ];then
 	echo -n "unpacking custom tarball"
 	do_shell "mkdir -p /cache/system/custom"
 	do_shell "cd /cache && xzcat /recovery/$CUST_TARBALL | tar xf -"
