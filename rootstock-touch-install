@@ -53,7 +53,7 @@ convert_android_img()
 
 prepare_ubuntu_system()
 {
-	do_shell "rm -f /data/system.img"
+	do_shell "rm -f /data/ubuntu.img"
 	for data in system android; do
 		do_shell "rm -rf /data/$data-data"
 	done
@@ -62,10 +62,14 @@ prepare_ubuntu_system()
 	else
 		echo -n "keep option set, keeping user data ... "
 	fi
-	do_shell "dd if=/dev/zero of=/data/system.img seek=500K bs=4096 count=0 >/dev/null 2>&1"
-	do_shell "mkfs.ext2 -F /data/system.img >/dev/null 2>&1"
+
+	do_shell "dd if=/dev/zero of=/data/ubuntu.img seek=500K bs=4096 count=0 >/dev/null 2>&1"
+	do_shell "mkfs.ext2 -F /data/ubuntu.img >/dev/null 2>&1"
 	do_shell "mkdir -p /cache/system"
-	do_shell "mount -o loop /data/system.img /cache/system/"
+	do_shell "mount -o loop /data/ubuntu.img /cache/system/"
+
+	# system.img is the deprecated name, but we make link to ubuntu.img
+	do_shell "ln /data/ubuntu.img /data/system.img"
 }
 
 cleanup()
