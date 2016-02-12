@@ -45,9 +45,9 @@ convert_android_img()
 		mkdir $TMPMOUNT
 		mount -t ext4 -o loop $WORKDIR/system.img.raw $TMPMOUNT
 		make_ext4fs -l 120M $WORKDIR/system.img $TMPMOUNT >/dev/null 2>&1
-		SYSIMAGE = $WORKDIR/system.img
+		SYSIMAGE=$WORKDIR/system.img
 	else
-		SYSIMAGE = $SYSIMG
+		SYSIMAGE=$SYSIMG
 	fi
 }
 
@@ -60,6 +60,7 @@ check_mounts(){
 		do_shell "mount /data"
 	fi
 }
+
 
 prepare_ubuntu_system()
 {
