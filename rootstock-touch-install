@@ -74,7 +74,7 @@ prepare_halium_system()
 cleanup()
 {
 	echo
-	echo "there was an error. cleaning up"
+	echo "cleaning up"
 	mount | grep -q $TMPMOUNT 2>/dev/null && umount $TMPMOUNT
 	cleanup_device
 	rm -rf $WORKDIR
