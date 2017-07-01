@@ -44,7 +44,7 @@ convert_android_img()
 		simg2img $SYSIMG $WORKDIR/system.img.raw
 		mkdir $TMPMOUNT
 		mount -t ext4 -o loop $WORKDIR/system.img.raw $TMPMOUNT
-		make_ext4fs -l 120M $WORKDIR/system.img $TMPMOUNT >/dev/null 2>&1
+		make_ext4fs -l 120M $WORKDIR/system.img $TMPMOUNT
 		SYSIMAGE=$WORKDIR/system.img
 	else
 		SYSIMAGE=$SYSIMG
@@ -65,14 +65,16 @@ check_mounts(){
 prepare_halium_system()
 {
 	do_shell "rm -f /data/rootfs.img"
-	do_shell "dd if=/dev/zero of=/data/rootfs.img seek=500K bs=4096 count=0 >/dev/null 2>&1"
-	do_shell "mkfs.ext2 -F /data/rootfs.img >/dev/null 2>&1"
+	do_shell "dd if=/dev/zero of=/data/rootfs.img seek=500K bs=4096 count=0"
+	do_shell "mkfs.ext2 -F /data/rootfs.img"
 	do_shell "mkdir -p /cache/system"
 	do_shell "mount -o loop /data/rootfs.img /cache/system/"
 }
 
 cleanup()
 {
+	echo
+	echo "there was an error. cleaning up"
 	mount | grep -q $TMPMOUNT 2>/dev/null && umount $TMPMOUNT
 	cleanup_device
 	rm -rf $WORKDIR
@@ -82,7 +84,7 @@ cleanup()
 cleanup_device()
 {
 	[ -e $WORKDIR/device-clean ] && return
-	do_shell "umount /cache/system/ 2>/dev/null && rm -rf /cache/system 2>/dev/null"
+	do_shell "umount /cache/system/ && rm -rf /cache/system"
 	do_shell "rm -f /recovery/$TARBALL"
 	[ -e $WORKDIR ] && touch $WORKDIR/device-clean 2>/dev/null || true
 }
@@ -168,14 +170,14 @@ check_mounts
 WORKDIR=$(mktemp -d /tmp/rootstock-touch-install.XXXXX)
 TMPMOUNT="$WORKDIR/tmpmount"
 
-echo -n "transfering rootfs tarball ... "
-adb push $TARPATH /recovery/ >/dev/null 2>&1
+echo "transfering rootfs tarball ... "
+adb push $TARPATH /recovery/
 echo "[done]"
 
 if [ ! -z "$CUST_TARPATH" ]; then
 	CUST_TARBALL=$(basename $CUST_TARPATH)
 	echo  -n "transferring custom tarball"
-	adb push $CUST_TARPATH /recovery/ >/dev/null 2>&1
+	adb push $CUST_TARPATH /recovery/
 	echo "[done]"
 fi
 
@@ -191,7 +193,7 @@ echo "[done]"
 echo -n "adding android system image to installation ... "
 convert_android_img
 ANDROID_DIR="/data"
-adb push $SYSIMAGE $ANDROID_DIR/system.img >/dev/null 2>&1
+adb push $SYSIMAGE $ANDROID_DIR/system.img
 echo "[done]"
 
 echo -n "cleaning up on device ... "
