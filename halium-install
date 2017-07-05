@@ -167,7 +167,7 @@ fi
 
 check_mounts
 
-WORKDIR=$(mktemp -d /tmp/rootstock-touch-install.XXXXX)
+WORKDIR=$(mktemp -d /tmp/halium-install.XXXXX)
 TMPMOUNT="$WORKDIR/tmpmount"
 
 echo "transfering rootfs tarball ... "
