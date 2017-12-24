@@ -200,5 +200,5 @@ echo -n "cleaning up on device ... "
 cleanup_device
 echo "[done]"
 
-echo "rebooting device"
-adb reboot
+echo "All done! Now you can use 'adb shell' to get a shell to the recovery, or"
+echo "simply reboot your device to start Halium."
