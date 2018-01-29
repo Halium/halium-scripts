@@ -37,6 +37,8 @@ umount_all()
 mount_all > /dev/null
 
 CHROOT='TERM=linux HOME=/root PATH=/sbin:/bin:/usr/sbin:/usr/bin:$PATH chroot /target'
+LINES=$(tput lines)
+COLUMNS=$(tput cols)
 
 if [ $# -eq 0 ]
 then # Interactive shell
@@ -44,6 +46,8 @@ then # Interactive shell
 	then # with tmux installed
 		tmux new-session -s halium-adb -d 'adb shell'
 		sleep 1
+		let LINES-=1
+		tmux send-keys -t halium-adb "export LINES=${LINES}; export COLUMNS=${COLUMNS}"$'\n'
 		tmux send-keys -t halium-adb "${CHROOT} /bin/bash; exit"$'\n'
 		tmux attach -t halium-adb
 	else # without tmux installed
