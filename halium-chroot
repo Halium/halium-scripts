@@ -44,12 +44,20 @@ if [ $# -eq 0 ]
 then # Interactive shell
 	if [ $(which tmux) ]
 	then # with tmux installed
-		tmux new-session -s halium-adb -d 'adb shell'
+		TARGET="halium-adb-$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 8 | head -n 1)"
+		if [ $TMUX ]
+		then # create new window if we are in a tmux session
+			tmux new-window -n $TARGET -d 'adb shell'
+			SWITCH='select-window'
+		else # create a new tmux session if none exists
+			tmux new-session -s $TARGET -d 'adb shell'
+			SWITCH='attach-session'
+			let LINES-=1
+		fi
 		sleep 1
-		let LINES-=1
-		tmux send-keys -t halium-adb "export LINES=${LINES}; export COLUMNS=${COLUMNS}"$'\n'
-		tmux send-keys -t halium-adb "${CHROOT} /bin/bash; exit"$'\n'
-		tmux attach -t halium-adb
+		tmux send-keys -t $TARGET "export LINES=${LINES}; export COLUMNS=${COLUMNS}"$'\n'
+		tmux send-keys -t $TARGET "${CHROOT} /bin/bash; exit"$'\n'
+		tmux $SWITCH -t $TARGET
 	else # without tmux installed
 		echo 'To automatically get an interactive chroot session, install'
 		echo 'The program "tmux". To enter the chroot environment run:'
